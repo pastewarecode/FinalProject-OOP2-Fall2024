@@ -1,0 +1,312 @@
+﻿@page "/flightspage"
+
+@using FlightBookingSystem.Components.ViewModel
+@using FlightBookingSystem.Components.Model
+
+<style>
+    /*Add CSS styling here*/
+    header
+    {
+        padding: 10px;
+        text-align: center;
+    }
+
+    .row
+    {
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    label
+    {
+        font-weight: bold;
+    }
+</style>
+
+<div class="container">
+    <div class="row">
+        <div>
+            <header class="align-content-center">
+                <h3>Flight Finder</h3>
+            </header>
+        </div>
+        <div class="row">
+
+            <!-- Select dropdown for Source -->
+            <div class="col-sm-3">
+                <label for="srcSelector">From: </label>
+                <select name="srcSelector" class="form-control" @bind="srcValue">
+                    <option value="@Utils.ANY">@Utils.ANY</option>
+                    @if (airports == null)
+                    {
+                        <option>Loading...</option>
+                    }
+                    else
+                    {
+                        @foreach (var a in airports)
+                        {
+                            <option value=@a>@a</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- Select dropdown for Destination -->
+            <div class="col-sm-3">
+                <label for="destSelector">To: </label>
+                <select name="destSelector" class="form-control" @bind="destValue">
+                    <option value="Any">@Utils.ANY</option>
+                    @if (airports == null)
+                    {
+                        <option>Loading...</option>
+                    }
+                    else
+                    {
+                        @foreach (var a in airports)
+                        {
+                            <option value=@a>@a</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- Select dropdown for Day -->
+            <div class="col-sm-3">
+                <label for="daySelector">Day: </label>
+                <select name="daySelector" class="form-control" @bind="dayValue">
+                    <option value="@Utils.ANY">@Utils.ANY</option>
+                    <option value="@Utils.SUNDAY">@Utils.SUNDAY</option>
+                    <option value="@Utils.MONDAY">@Utils.MONDAY</option>
+                    <option value="@Utils.TUESDAY">@Utils.TUESDAY</option>
+                    <option value="@Utils.WEDNESDAY">@Utils.WEDNESDAY</option>
+                    <option value="@Utils.THURSDAY">@Utils.THURSDAY</option>
+                    <option value="@Utils.FRIDAY">@Utils.FRIDAY</option>
+                    <option value="@Utils.SATURDAY">@Utils.SATURDAY</option>
+                </select>
+            </div>
+
+            <!-- Find Flights Button -->
+            <div class="col-sm-3">
+                <button class="btn btn-primary form-control" @onclick="@FindFlights">Find flights</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <header class="align-content-center">
+            <h3>Flights</h3>
+        </header>
+        <div class="row">
+            <label for="fliteredFlights">Flight Search Result:</label>
+            <select name="fliteredFlights" class="form-control" @onchange="@fillForm">
+                @if (flightList == null || flightList.Count == 0)
+                {
+                    <option>Select Search Criteria</option>
+                }
+                else
+                {
+                    <option>Select a flight from this list</option>
+                    @foreach (var f in flightList)
+                    {
+                        <option value=@f.FlightId>@f.FlightId , @f.Airline, @f.Source.Name, @f.Destination.Name, @f.Day, @f.Time, @f.Cost</option>
+                    }
+                }
+
+            </select>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <!-- Add UI code for Reserve Section -->
+        <header class="align-content-center">
+            <h3>Reserve</h3>
+        </header>
+
+        <div class="form-group">
+            <label for="flightCode">Flight code:</label>
+            <input type="text" id="flightCode" class="form-control" value="@flightCode" readonly placeholder="Flight"/>
+
+            <label for="airLine">Airline:</label>
+            <input type="text" id="airLine" class="form-control" value="@airline" readonly placeholder="Airline" />
+
+            <label for="day">Day:</label>
+            <input type="text" id="day" class="form-control" value="@day" readonly placeholder="Day" />
+
+            <label for="time">Time:</label>
+            <input type="text" id="time" class="form-control" value="@time" readonly placeholder="Time" />
+
+            <label for="cost">Cost:</label>
+            <input type="text" id="cost" class="form-control" value="@cost" readonly placeholder="0" />
+
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="@name" placeholder="Name" />
+
+            <label for="citizenship">Citizenship:</label>
+            <input type="text" id="citizenship" class="form-control" @bind="@citizenship" placeholder="Citizenship" />
+
+
+            <div class="col-sm-10 p-3">
+                <button type="button" class="btn btn-primary" @onclick="Reserve">Reserve</button>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <script>
+            alert('@successMessage');
+        </script>
+    }
+
+
+    <div class="row">
+        <!-- Add UI code for Search Reservation Section -->
+    </div>
+
+</div>
+
+
+
+@code {
+    private FlightManager fm = FlightManager.INSTANCE;
+
+    private string srcValue;
+    private string destValue;
+    private string dayValue = Utils.ANY;
+    private List<string> airports = FlightManager.GetAiportCodeList();
+    private List<Flight> flightList = new();
+
+    //holds flight details
+    private string flightCode;
+    private string airline;
+    private string day;
+    private string time;
+    private decimal cost;
+    //holds flight details used for validation
+    private string name;
+    private string citizenship;
+    private string errorMessage;
+    private string successMessage;
+
+    private void FindFlights() 
+    {
+        flightList = fm.FindFlights(srcValue, destValue, dayValue);
+    }
+
+    private void fillForm(ChangeEventArgs e)
+    {
+        /* When user select any flight from the Flight Search Result selection menu, this method will be called.
+         * Inside this method add code to bind the flight details to input boxes in Reservation section
+        */
+
+        //get the flightId chosen by the user from the dropdown 
+        string selectedFlightId = e.Value?.ToString();
+
+        //verifies if flight has been selected
+        if (string.IsNullOrEmpty(selectedFlightId) || selectedFlightId == "Select a flight from this list")
+        {
+            flightCode = string.Empty;
+            airline = string.Empty;
+            day = string.Empty;
+            time = string.Empty;
+            cost = 0;
+            errorMessage = "Please select a flight.";
+            return;
+        }
+
+        //get the flight that was selected 
+        var selectedFlight = flightList.FirstOrDefault(f => f.FlightId.ToString() == selectedFlightId);
+
+        if (selectedFlight != null)
+        {
+            //updates the properties we made above with the details from the selectedFlight
+            flightCode = selectedFlight.FlightId.ToString();
+            airline = selectedFlight.Airline;
+            day = selectedFlight.Day;
+            time = selectedFlight.Time;
+            cost = selectedFlight.Cost;
+            errorMessage = string.Empty; //returns the error message back to empty
+        }
+    }
+
+    //reserve method
+    private void Reserve()
+    {
+        //checks if the flightCode is null or empty and returns an error message
+        if (string.IsNullOrEmpty(flightCode))
+        {
+            errorMessage = "Please select a flight.";
+            StateHasChanged();
+            return;
+        }
+
+        //checks if name has been entered and returns error message if not
+        if (string.IsNullOrEmpty(name))
+        {
+            errorMessage = "Name cannot be empty.";
+            StateHasChanged();
+            return;
+        }
+
+        //checks if citizenship has been entered and returns error message if not
+        if (string.IsNullOrEmpty(citizenship))
+        {
+            errorMessage = "Citizenship cannot be empty.";
+            StateHasChanged();
+            return;
+        }
+
+        //if it passes verification then a new reservation object will be created
+        var reservation = new Reservation(
+            flightCode,
+            airline,  
+            day,      
+            time,      
+            cost,      
+            name,       
+            citizenship
+        );
+
+        //calls the save reservation method to save it
+        SaveReservation(reservation);
+
+        //calls clear form method to allow new reservation to be created
+        ClearForm();
+        StateHasChanged();
+    }
+
+    //method to save the reservation to csv file
+    private string SaveReservation(Reservation reservation)
+    {
+        var reservationsFilePath = "C:\\OOP2 Assignment 2\\Assignment2_Skeleton\\Assignment2_Skeleton\\FlightBookingSystem\\Resources\\Raw\\reservations.csv";
+
+        using (var writer = new StreamWriter(reservationsFilePath, true))
+        {
+            writer.WriteLine($"{reservation.FlightCode},{reservation.Airline},{reservation.Day},{reservation.Time},{reservation.Cost},{reservation.Name},{reservation.Citizenship}");
+        }
+
+        successMessage = "The reservation has been successfully saved.";
+        StateHasChanged();
+        return successMessage;
+    }
+
+    //method to automatically clear the form
+    private void ClearForm()
+    {
+        flightCode = string.Empty;
+        airline = string.Empty;
+        day = string.Empty;
+        time = string.Empty;
+        cost = 0;
+        name = string.Empty;
+        citizenship = string.Empty; 
+        errorMessage = string.Empty;
+    }
+}
