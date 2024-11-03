@@ -160,9 +160,7 @@
 
     @if (!string.IsNullOrEmpty(successMessage))
     {
-        <script>
-            alert('@successMessage');
-        </script>
+        <div class="alert alert-success">@successMessage</div>
     }
 
 
@@ -293,8 +291,8 @@
         }
 
         successMessage = "The reservation has been successfully saved.";
-        StateHasChanged();
         return successMessage;
+        StateHasChanged();
     }
 
     //method to automatically clear the form
