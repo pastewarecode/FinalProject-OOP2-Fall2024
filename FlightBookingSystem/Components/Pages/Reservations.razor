@@ -1,93 +1,93 @@
-﻿@page "/flightspage"
+﻿@page "/reservationspage"
 
 @using FlightBookingSystem.Components.ViewModel
 @using FlightBookingSystem.Components.Model
 
 <style>
     /*Add CSS styling here*/
-    header
-    {
+    header {
         padding: 10px;
         text-align: center;
     }
 
-    .row
-    {
+    .row {
         align-items: center;
         margin-bottom: 10px;
     }
 
-    label
-    {
+    label {
         font-weight: bold;
     }
 </style>
+
 
 <div class="container">
     <div class="row">
         <div>
             <header class="align-content-center">
-                <h3>Flight Finder</h3>
+                <h3>Reservation Finder</h3>
             </header>
         </div>
         <div class="row">
 
-            <!-- Select dropdown for Source -->
+            <!-- Select dropdown for Code -->
             <div class="col-sm-3">
-                <label for="srcSelector">From: </label>
-                <select name="srcSelector" class="form-control" @bind="srcValue">
-                    <option value="@Utils.ANY">@Utils.ANY</option>
-                    @if (airports == null)
+                <label for="flightCode">Code: </label>
+                <select name="flightCode" class="form-control" @bind="flightCode">
+                    <option>Any</option>
+                    @if (activeReservations.Count < 0)
                     {
-                        <option>Loading...</option>
+                        <option>Any</option>
                     }
                     else
                     {
-                        @foreach (var a in airports)
+                        @foreach (Reservation r in activeReservations)
                         {
-                            <option value=@a>@a</option>
+                            <option value="@r.FlightCode">@r.FlightCode</option>
                         }
                     }
                 </select>
             </div>
 
-            <!-- Select dropdown for Destination -->
+            <!-- Select dropdown for Airline -->
             <div class="col-sm-3">
-                <label for="destSelector">To: </label>
-                <select name="destSelector" class="form-control" @bind="destValue">
-                    <option value="Any">@Utils.ANY</option>
-                    @if (airports == null)
+                <label for="airline">Airline: </label>
+                <select name="airline" class="form-control" @bind="airline">
+                    @if (activeReservations.Count < 0)
                     {
-                        <option>Loading...</option>
+                        <option>Any</option>
                     }
                     else
                     {
-                        @foreach (var a in airports)
+                        @foreach (Reservation r in activeReservations)
                         {
-                            <option value=@a>@a</option>
+                            <option value="@r.Airline">@r.Airline</option>
                         }
                     }
                 </select>
             </div>
 
-            <!-- Select dropdown for Day -->
+            <!-- Select dropdown for Name -->
             <div class="col-sm-3">
-                <label for="daySelector">Day: </label>
-                <select name="daySelector" class="form-control" @bind="dayValue">
-                    <option value="@Utils.ANY">@Utils.ANY</option>
-                    <option value="@Utils.SUNDAY">@Utils.SUNDAY</option>
-                    <option value="@Utils.MONDAY">@Utils.MONDAY</option>
-                    <option value="@Utils.TUESDAY">@Utils.TUESDAY</option>
-                    <option value="@Utils.WEDNESDAY">@Utils.WEDNESDAY</option>
-                    <option value="@Utils.THURSDAY">@Utils.THURSDAY</option>
-                    <option value="@Utils.FRIDAY">@Utils.FRIDAY</option>
-                    <option value="@Utils.SATURDAY">@Utils.SATURDAY</option>
+                <label for="Name">Name: </label>
+                <select name="Name" class="form-control" @bind="name">
+                    @if (activeReservations.Count < 0)
+                    {
+                        <option>Any</option>
+                    }
+                    else
+                    {
+                        @foreach (Reservation r in activeReservations)
+                        {
+                            <option value="@r.Name">@r.Name</option>
+                        }
+                    }
                 </select>
             </div>
 
-            <!-- Find Flights Button -->
+            <!-- Find Reservations Button -->
             <div class="col-sm-3">
-                <button class="btn btn-primary form-control" @onclick="@FindFlights">Find flights</button>
+                <button class="btn btn-primary form-control" @onclick="@FindFlights">Find reservations</button>
             </div>
 
         </div>
@@ -95,21 +95,21 @@
 
     <div class="row">
         <header class="align-content-center">
-            <h3>Flights</h3>
+            <h3>Reservations</h3>
         </header>
         <div class="row">
             <label for="fliteredFlights">Flight Search Result:</label>
             <select name="fliteredFlights" class="form-control" @onchange="@fillForm">
                 @if (flightList == null || flightList.Count == 0)
                 {
-                    <option>Select Search Criteria</option>
+                    <option>Loading...</option>
                 }
                 else
                 {
                     <option>Select a flight from this list</option>
-                    @foreach (var f in flightList)
+                    @foreach (Reservation r in activeReservations)
                     {
-                        <option value=@f.FlightId>@f.FlightId , @f.Airline, @f.Source.Name, @f.Destination.Name, @f.Day, @f.Time, @f.Cost</option>
+                        <option value=@r.FlightCode>@r.FlightCode , @r.Airline, @r.Name, @r.Name, @r.Day, @r.Time, @r.Cost</option>
                     }
                 }
 
@@ -119,14 +119,14 @@
 
 
     <div class="row">
-        <!-- Add UI code for Reserve Section -->
+        <!-- Add UI code for Search Reservation Section -->
         <header class="align-content-center">
             <h3>Reserve</h3>
         </header>
 
         <div class="form-group">
             <label for="flightCode">Flight code:</label>
-            <input type="text" id="flightCode" class="form-control" value="@flightCode" readonly placeholder="Flight"/>
+            <input type="text" id="flightCode" class="form-control" value="@flightCode" readonly placeholder="Flight" />
 
             <label for="airLine">Airline:</label>
             <input type="text" id="airLine" class="form-control" value="@airline" readonly placeholder="Airline" />
@@ -146,13 +146,19 @@
             <label for="citizenship">Citizenship:</label>
             <input type="text" id="citizenship" class="form-control" @bind="@citizenship" placeholder="Citizenship" />
 
-
+            <div>
+                <label for="status">Status:</label>
+                <select>
+                    <option value="=Active">Active</option>
+                    <option value="=Inactive">Inactive</option>
+                </select>
+            </div>
             <div class="col-sm-10 p-3">
-                <button type="button" class="btn btn-primary" @onclick="Reserve">Reserve</button>
+                <button type="button" class="btn btn-primary">Save</button>
             </div>
         </div>
     </div>
-    
+
     @if (!string.IsNullOrEmpty(errorMessage))
     {
         <div class="alert alert-danger">@errorMessage</div>
@@ -163,14 +169,7 @@
         <div class="alert alert-success">@successMessage</div>
     }
 
-
-    <div class="row">
-        <!-- Add UI code for Search Reservation Section -->
-    </div>
-
 </div>
-
-
 
 @code {
     private FlightManager fm = FlightManager.INSTANCE;
@@ -180,6 +179,10 @@
     private string dayValue = Utils.ANY;
     private List<string> airports = FlightManager.GetAiportCodeList();
     private List<Flight> flightList = new();
+
+    //creating a list of reservations so we can access it from the reservation finder
+    private List<Reservation> activeReservations = new();
+
 
     //holds flight details
     private string flightCode;
@@ -193,7 +196,7 @@
     private string errorMessage;
     private string successMessage;
 
-    private void FindFlights() 
+    private void FindFlights()
     {
         flightList = fm.FindFlights(srcValue, destValue, dayValue);
     }
@@ -204,7 +207,7 @@
          * Inside this method add code to bind the flight details to input boxes in Reservation section
         */
 
-        //get the flightId chosen by the user from the dropdown 
+        //get the flightId chosen by the user from the dropdown
         string selectedFlightId = e.Value?.ToString();
 
         //verifies if flight has been selected
@@ -219,7 +222,7 @@
             return;
         }
 
-        //get the flight that was selected 
+        //get the flight that was selected
         var selectedFlight = flightList.FirstOrDefault(f => f.FlightId.ToString() == selectedFlightId);
 
         if (selectedFlight != null)
@@ -234,77 +237,43 @@
         }
     }
 
-    //reserve method
-    private void Reserve()
-    {
-        //checks if the flightCode is null or empty and returns an error message
-        if (string.IsNullOrEmpty(flightCode))
-        {
-            errorMessage = "Please select a flight.";
-            StateHasChanged();
-            return;
-        }
-
-        //checks if name has been entered and returns error message if not
-        if (string.IsNullOrEmpty(name))
-        {
-            errorMessage = "Name cannot be empty.";
-            StateHasChanged();
-            return;
-        }
-
-        //checks if citizenship has been entered and returns error message if not
-        if (string.IsNullOrEmpty(citizenship))
-        {
-            errorMessage = "Citizenship cannot be empty.";
-            StateHasChanged();
-            return;
-        }
-
-        //if it passes verification then a new reservation object will be created
-        var reservation = new Reservation(
-            flightCode,
-            airline,  
-            day,      
-            time,      
-            cost,      
-            name,       
-            citizenship
-        );
-
-        //calls the save reservation method to save it
-        SaveReservation(reservation);
-
-        //calls clear form method to allow new reservation to be created
-        ClearForm();
-        StateHasChanged();
-    }
-
-    //method to save the reservation to csv file
-    private string SaveReservation(Reservation reservation)
+    //method to load reservations into the Reservations list
+    private void LoadReservations()
     {
         var reservationsFilePath = "C:\\OOP2 Assignment 2\\Assignment2_Skeleton\\Assignment2_Skeleton\\FlightBookingSystem\\Resources\\Raw\\reservations.csv";
 
-        using (var writer = new StreamWriter(reservationsFilePath, true))
+        if (File.Exists(reservationsFilePath))
         {
-            writer.WriteLine($"{reservation.FlightCode},{reservation.Airline},{reservation.Day},{reservation.Time},{reservation.Cost},{reservation.Name},{reservation.Citizenship}");
+            //clears the list before adding more reservations to avoid duplicates
+            activeReservations.Clear();
+
+            var lines = File.ReadAllLines(reservationsFilePath);
+            foreach (var line in lines)
+            {
+                //splits up parts of data and inserts it into the reservations list and defines each part to the properties
+                var parts = line.Split(',');
+                if (parts.Length >= 7)
+                {
+                    Reservation reservations = new Reservation
+                        {
+                            FlightCode = parts[0],
+                            Airline = parts[1],
+                            Day = parts[2],
+                            Time = parts[3],
+                            Cost = decimal.Parse(parts[4]),
+                            Name = parts[5],
+                            Citizenship = parts[6]
+                        };
+                    activeReservations.Add(reservations);
+                }
+            }
         }
-
-        successMessage = "The reservation has been successfully saved.";
-        StateHasChanged();
-        return successMessage;
     }
 
-    //method to automatically clear the form
-    private void ClearForm()
+    //runs the loadReservations method when the component loads
+    protected override void OnInitialized()
     {
-        flightCode = string.Empty;
-        airline = string.Empty;
-        day = string.Empty;
-        time = string.Empty;
-        cost = 0;
-        name = string.Empty;
-        citizenship = string.Empty; 
-        errorMessage = string.Empty;
+        LoadReservations();
     }
+
 }

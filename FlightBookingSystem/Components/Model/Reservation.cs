@@ -58,6 +58,8 @@ namespace FlightBookingSystem.Components.Model
             set { _Citizenship = value; }
         }
 
+        public Reservation() { }
+
         public Reservation(string flightCode, string airline, string day, string time, decimal cost, string name, string citizenship)
         {
             FlightCode = flightCode;

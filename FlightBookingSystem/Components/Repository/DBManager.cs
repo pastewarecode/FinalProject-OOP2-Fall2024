@@ -63,11 +63,11 @@ namespace FlightBookingSystem.Components.Repository
             }
             catch (FileNotFoundException)
             {
-                // Add handling
+                throw new Exception("File not found");
             }
             catch (NullReferenceException)
             {
-                // Add handling
+                throw new Exception("Reference NULL");
             }
             
         }
@@ -99,11 +99,11 @@ namespace FlightBookingSystem.Components.Repository
             }
             catch (FileNotFoundException)
             {
-                // Add handling
+                throw new Exception("File not found");
             }
             catch (NullReferenceException)
             {
-                // Add handling
+                throw new Exception("Reference NULL");
             }
         }
 
