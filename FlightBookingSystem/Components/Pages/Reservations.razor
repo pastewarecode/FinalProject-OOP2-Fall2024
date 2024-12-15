@@ -35,11 +35,11 @@
                 <select name="flightCode" class="form-control" @bind="flightCode">
                     @if (activeReservations.Count == 0)
                     {
-                        <option>Any</option>
+                        <option value="Any">Any</option>
                     }
                     else
                     {
-                        <option>Any</option>
+                        <option value="Any">Any</option>
 
                         @foreach (Reservation r in activeReservations)
                         {
@@ -55,10 +55,12 @@
                 <select name="airline" class="form-control" @bind="airline">
                     @if (activeReservations.Count == 0)
                     {
-                        <option>Any</option>
+                        <option value="Any">Any</option>
                     }
                     else
                     {
+                        <option value="Any">Any</option>
+
                         @foreach (Reservation r in activeReservations)
                         {
                             <option value="@r.Airline">@r.Airline</option>
@@ -73,10 +75,12 @@
                 <select name="Name" class="form-control" @bind="name">
                     @if (activeReservations.Count == 0)
                     {
-                        <option>Any</option>
+                        <option value="Any">Any</option>
                     }
                     else
                     {
+                        <option value="Any">Any</option>
+
                         @foreach (Reservation r in activeReservations)
                         {
                             <option value="@r.Name">@r.Name</option>
@@ -203,7 +207,7 @@
 
         if (filteredReservations.Count == 0)
         {
-            errorMessage = "No reservations found with the selected criteria.";
+            errorMessage = "No reservations found.";
         }
         else
         {
