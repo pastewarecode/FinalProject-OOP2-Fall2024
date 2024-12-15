@@ -33,13 +33,14 @@
             <div class="col-sm-3">
                 <label for="flightCode">Code: </label>
                 <select name="flightCode" class="form-control" @bind="flightCode">
-                    <option>Any</option>
                     @if (activeReservations.Count == 0)
                     {
                         <option>Any</option>
                     }
                     else
                     {
+                        <option>Any</option>
+
                         @foreach (Reservation r in activeReservations)
                         {
                             <option value="@r.FlightCode">@r.FlightCode</option>
@@ -151,7 +152,7 @@
                 </select>
             </div>
             <div class="col-sm-10 p-3">
-                <button type="button" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-primary" @onclick="UpdateReservation">Update</button>
             </div>
         </div>
     </div>
@@ -174,11 +175,9 @@
     private string srcValue;
     private string destValue;
     private string dayValue = Utils.ANY;
-
     private List<string> airports = FlightManager.GetAiportCodeList();
-
-    private List<Reservation> activeReservations = new(); //to store all reservations
-    private List<Reservation> filteredReservations = new(); //to store the filtered reservations
+    private List<Reservation> activeReservations = new(); // Stores all reservations
+    private List<Reservation> filteredReservations = new(); // Stores filtered reservations
 
     //holds flight details
     private string flightCode;
@@ -195,7 +194,7 @@
 
     private void FindReservations()
     {
-        //filters reservations with the code, airline, and name
+        //filter reservations based on the selected criteria (flightCode, airline, and name)
         filteredReservations = activeReservations
             .Where(r => (flightCode == "Any" || r.FlightCode == flightCode)
                 && (airline == "Any" || r.Airline == airline)
@@ -204,7 +203,7 @@
 
         if (filteredReservations.Count == 0)
         {
-            errorMessage = "No reservations found.";
+            errorMessage = "No reservations found with the selected criteria.";
         }
         else
         {
@@ -290,5 +289,43 @@
     protected override void OnInitialized()
     {
         LoadReservations();
+    }
+
+    //added function for updating reservation
+    private void UpdateReservation()
+    {
+        try
+        {
+            var reservationsFilePath = "C:\\Users\\codyt\\Desktop\\SAIT Fall 2024\\OOP2 Fall 2024\\Final\\FlightBookingSystem\\Resources\\Raw\\reservations.csv";
+
+            //read lines in reservations
+            var lines = System.IO.File.ReadAllLines(reservationsFilePath);
+
+            //for each word in reservations we will split it with a comma
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var columns = lines[i].Split(',');
+
+                if (columns[0] == flightCode) //when the flightCode matches the one we wanna update we will continue 
+                {
+                    //update using new name and citizenship entered in the text box.
+                    columns[5] = name;
+                    columns[6] = citizenship;
+
+                    //join flight data back together
+                    lines[i] = string.Join(",", columns);
+                    break;
+                }
+            }
+
+            // Write updated lines back to the file
+            System.IO.File.WriteAllLines(reservationsFilePath, lines);
+
+            successMessage = "Reservation updated successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
     }
 }
