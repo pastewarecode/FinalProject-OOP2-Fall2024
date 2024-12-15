@@ -20,7 +20,6 @@
     }
 </style>
 
-
 <div class="container">
     <div class="row">
         <div>
@@ -35,7 +34,7 @@
                 <label for="flightCode">Code: </label>
                 <select name="flightCode" class="form-control" @bind="flightCode">
                     <option>Any</option>
-                    @if (activeReservations.Count < 0)
+                    @if (activeReservations.Count == 0)
                     {
                         <option>Any</option>
                     }
@@ -53,7 +52,7 @@
             <div class="col-sm-3">
                 <label for="airline">Airline: </label>
                 <select name="airline" class="form-control" @bind="airline">
-                    @if (activeReservations.Count < 0)
+                    @if (activeReservations.Count == 0)
                     {
                         <option>Any</option>
                     }
@@ -71,7 +70,7 @@
             <div class="col-sm-3">
                 <label for="Name">Name: </label>
                 <select name="Name" class="form-control" @bind="name">
-                    @if (activeReservations.Count < 0)
+                    @if (activeReservations.Count == 0)
                     {
                         <option>Any</option>
                     }
@@ -87,7 +86,7 @@
 
             <!-- Find Reservations Button -->
             <div class="col-sm-3">
-                <button class="btn btn-primary form-control" @onclick="@FindFlights">Find reservations</button>
+                <button class="btn btn-primary form-control" @onclick="FindReservations">Find reservations</button>
             </div>
 
         </div>
@@ -99,24 +98,22 @@
         </header>
         <div class="row">
             <label for="fliteredFlights">Flight Search Result:</label>
-            <select name="fliteredFlights" class="form-control" @onchange="@fillForm">
-                @if (flightList == null || flightList.Count == 0)
+            <select name="fliteredFlights" class="form-control" @onchange="fillForm">
+                @if (filteredReservations == null || filteredReservations.Count == 0)
                 {
-                    <option>Loading...</option>
+                    <option>No reservations available</option>
                 }
                 else
                 {
                     <option>Select a flight from this list</option>
-                    @foreach (Reservation r in activeReservations)
+                    @foreach (Reservation r in filteredReservations)
                     {
-                        <option value=@r.FlightCode>@r.FlightCode , @r.Airline, @r.Name, @r.Name, @r.Day, @r.Time, @r.Cost</option>
+                        <option value="@r.FlightCode">@r.FlightCode , @r.Airline, @r.Name, @r.Day, @r.Time, @r.Cost</option>
                     }
                 }
-
             </select>
         </div>
     </div>
-
 
     <div class="row">
         <!-- Add UI code for Search Reservation Section -->
@@ -141,10 +138,10 @@
             <input type="text" id="cost" class="form-control" value="@cost" readonly placeholder="0" />
 
             <label for="name">Name:</label>
-            <input type="text" id="name" class="form-control" @bind="@name" placeholder="Name" />
+            <input type="text" id="name" class="form-control" @bind="name" placeholder="Name" />
 
             <label for="citizenship">Citizenship:</label>
-            <input type="text" id="citizenship" class="form-control" @bind="@citizenship" placeholder="Citizenship" />
+            <input type="text" id="citizenship" class="form-control" @bind="citizenship" placeholder="Citizenship" />
 
             <div>
                 <label for="status">Status:</label>
@@ -177,12 +174,11 @@
     private string srcValue;
     private string destValue;
     private string dayValue = Utils.ANY;
+
     private List<string> airports = FlightManager.GetAiportCodeList();
-    private List<Flight> flightList = new();
 
-    //creating a list of reservations so we can access it from the reservation finder
-    private List<Reservation> activeReservations = new();
-
+    private List<Reservation> activeReservations = new(); //to store all reservations
+    private List<Reservation> filteredReservations = new(); //to store the filtered reservations
 
     //holds flight details
     private string flightCode;
@@ -190,15 +186,30 @@
     private string day;
     private string time;
     private decimal cost;
+
     //holds flight details used for validation
     private string name;
     private string citizenship;
     private string errorMessage;
     private string successMessage;
 
-    private void FindFlights()
+    private void FindReservations()
     {
-        flightList = fm.FindFlights(srcValue, destValue, dayValue);
+        //filters reservations with the code, airline, and name
+        filteredReservations = activeReservations
+            .Where(r => (flightCode == "Any" || r.FlightCode == flightCode)
+                && (airline == "Any" || r.Airline == airline)
+                && (name == "Any" || r.Name == name))
+            .ToList();
+
+        if (filteredReservations.Count == 0)
+        {
+            errorMessage = "No reservations found.";
+        }
+        else
+        {
+            errorMessage = string.Empty;
+        }
     }
 
     private void fillForm(ChangeEventArgs e)
@@ -222,17 +233,19 @@
             return;
         }
 
-        //get the flight that was selected
-        var selectedFlight = flightList.FirstOrDefault(f => f.FlightId.ToString() == selectedFlightId);
+        //get the reservation that was selected
+        var selectedReservation = filteredReservations.FirstOrDefault(r => r.FlightCode == selectedFlightId);
 
-        if (selectedFlight != null)
+        if (selectedReservation != null)
         {
-            //updates the properties we made above with the details from the selectedFlight
-            flightCode = selectedFlight.FlightId.ToString();
-            airline = selectedFlight.Airline;
-            day = selectedFlight.Day;
-            time = selectedFlight.Time;
-            cost = selectedFlight.Cost;
+            //updates the properties we made above with the details from the selectedReservation
+            flightCode = selectedReservation.FlightCode;
+            airline = selectedReservation.Airline;
+            day = selectedReservation.Day;
+            time = selectedReservation.Time;
+            cost = selectedReservation.Cost;
+            name = selectedReservation.Name;
+            citizenship = selectedReservation.Citizenship;
             errorMessage = string.Empty; //returns the error message back to empty
         }
     }
@@ -242,17 +255,7 @@
     {
 
         //create a relative path to the reservations.csv
-        var relativePath = "Resources\\Raw\\reservations.csv";
-
-        //combines the base directory with our path
-        var reservationsFilePath = Path.Combine(AppContext.BaseDirectory, relativePath);
-
-        //if directory doesnt exist we will create a directory
-        var directory = Path.GetDirectoryName(reservationsFilePath);
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        var reservationsFilePath = "C:\\Users\\codyt\\Desktop\\SAIT Fall 2024\\OOP2 Fall 2024\\Final\\FlightBookingSystem\\Resources\\Raw\\reservations.csv";
 
         if (File.Exists(reservationsFilePath))
         {
@@ -272,7 +275,7 @@
                             Airline = parts[1],
                             Day = parts[2],
                             Time = parts[3],
-                            Cost = decimal.Parse(parts[4]), 
+                            Cost = decimal.Parse(parts[4]),
                             Name = parts[5],
                             Citizenship = parts[6]
                         };
@@ -288,5 +291,4 @@
     {
         LoadReservations();
     }
-
 }

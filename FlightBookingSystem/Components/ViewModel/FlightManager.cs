@@ -14,23 +14,21 @@ namespace FlightBookingSystem.Components.ViewModel
         public static FlightManager INSTANCE = new FlightManager();
 
         private List<Airport> AirportList = new List<Airport>();
-
         private List<Flight> FlightList = new List<Flight>();
+        private List<Reservation> ReservationList = new List<Reservation>();
 
         private FlightManager()
         {
-            
+
         }
 
-        
         public void AddAirport(string code, string name)
         {
-            Airport newAirport = new Airport(code,name);
+            Airport newAirport = new Airport(code, name);
 
             if (AirportList.Contains(newAirport)) return;
 
             AirportList.Add(newAirport);
-
         }
 
         public void AddFlight(string flight_id, string airline, Airport source, Airport destination, string day, string time, int totalseats, decimal cost)
@@ -42,15 +40,15 @@ namespace FlightBookingSystem.Components.ViewModel
 
         public Airport GetAirportByCode(string code)
         {
-            foreach(Airport airport in AirportList)
+            foreach (Airport airport in AirportList)
             {
-                if(airport.Code.Equals(code, StringComparison.OrdinalIgnoreCase)) return airport;
+                if (airport.Code.Equals(code, StringComparison.OrdinalIgnoreCase)) return airport;
             }
             return null;
         }
 
-        public static List<string> GetAiportCodeList() 
-        { 
+        public static List<string> GetAiportCodeList()
+        {
             List<string> airportName = new List<string>();
             foreach (Airport airport in INSTANCE.AirportList)
             {
@@ -59,14 +57,13 @@ namespace FlightBookingSystem.Components.ViewModel
             return airportName;
         }
 
-
-
         public List<Flight> FindFlights(string src, string dest, string day)
         {
             if (FlightList.Count == 0)
             {
                 DBManager.INSTANCE.RefreshFlights();
             }
+
             List<Flight> list = new List<Flight>();
             foreach (var flight in FlightList)
             {
@@ -74,12 +71,43 @@ namespace FlightBookingSystem.Components.ViewModel
                     flight.Destination.Name.Equals(dest) &&
                     (flight.Day.Equals(day) || day.Equals("Any")))
                 {
-
                     list.Add(flight);
                 }
-
             }
             return list;
+        }
+
+        //added find reservations method
+        public List<Reservation> FindReservations(string flightCode, string airline, string name)
+        {
+            List<Reservation> filteredReservations = new List<Reservation>();
+
+            foreach (var reservation in ReservationList)
+            {
+                bool matches = true;
+
+                if (!string.IsNullOrEmpty(flightCode) && !reservation.FlightCode.Contains(flightCode))
+                {
+                    matches = false;
+                }
+
+                if (!string.IsNullOrEmpty(airline) && !reservation.Airline.Contains(airline))
+                {
+                    matches = false;
+                }
+
+                if (!string.IsNullOrEmpty(name) && !reservation.Name.Contains(name))
+                {
+                    matches = false;
+                }
+
+                if (matches)
+                {
+                    filteredReservations.Add(reservation);
+                }
+            }
+
+            return filteredReservations;
         }
     }
 }
