@@ -240,7 +240,19 @@
     //method to load reservations into the Reservations list
     private void LoadReservations()
     {
-        var reservationsFilePath = "C:\\OOP2 Assignment 2\\Assignment2_Skeleton\\Assignment2_Skeleton\\FlightBookingSystem\\Resources\\Raw\\reservations.csv";
+
+        //create a relative path to the reservations.csv
+        var relativePath = "Resources\\Raw\\reservations.csv";
+
+        //combines the base directory with our path
+        var reservationsFilePath = Path.Combine(AppContext.BaseDirectory, relativePath);
+
+        //if directory doesnt exist we will create a directory
+        var directory = Path.GetDirectoryName(reservationsFilePath);
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
 
         if (File.Exists(reservationsFilePath))
         {
@@ -260,10 +272,11 @@
                             Airline = parts[1],
                             Day = parts[2],
                             Time = parts[3],
-                            Cost = decimal.Parse(parts[4]),
+                            Cost = decimal.Parse(parts[4]), 
                             Name = parts[5],
                             Citizenship = parts[6]
                         };
+
                     activeReservations.Add(reservations);
                 }
             }
