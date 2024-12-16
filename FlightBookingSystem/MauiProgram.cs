@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using FlightBookingSystem.Components.Repository;
+
 
 namespace FlightBookingSystem
 {
@@ -16,8 +18,11 @@ namespace FlightBookingSystem
 
             builder.Services.AddMauiBlazorWebView();
 
+            builder.Services.AddSingleton<DBConnector>();
+            builder.Services.AddSingleton<StartUpDB>();
+
 #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
 
